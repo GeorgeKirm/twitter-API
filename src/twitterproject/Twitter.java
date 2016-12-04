@@ -5,9 +5,6 @@
  */
 package twitterproject;
 
-import com.mongodb.DBObject;
-import com.mongodb.util.JSON;
-import static java.lang.Thread.sleep;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import twitter4j.FilterQuery;
@@ -20,8 +17,7 @@ import twitter4j.TwitterStream;
 import twitter4j.TwitterStreamFactory;
 import twitter4j.conf.ConfigurationBuilder;
 import static java.lang.Thread.sleep;
-import static java.lang.Thread.sleep;
-import static java.lang.Thread.sleep;
+import org.bson.Document;
 
 /**
  *
@@ -49,8 +45,8 @@ public class Twitter {
 //                System.out.println("@" + status.getUser().getScreenName() + " : " + status.getText() + status.getCreatedAt());
                 String tweet = TwitterObjectFactory.getRawJSON(status);
 //                System.out.println(tweet); //show tweet in json format
-                DBObject doc = (DBObject)JSON.parse(tweet);
-                dataBase.collectionGetter().insert(doc); //insert in MongoDB
+                Document doc = Document.parse(tweet);
+                dataBase.collectionGetter().insertOne(doc); //insert in MongoDB
             }
 
             @Override
