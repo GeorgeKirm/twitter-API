@@ -5,9 +5,6 @@
  */
 package twitterproject;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
 import org.bson.Document;
 import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
@@ -30,6 +27,7 @@ public class MongoDB {
 
     private MongoDatabase db;
     private MongoCollection<Document> collection;
+    private MongoCollection<Document> collectionXima;
     private MongoClient mongo;
 
     MongoDB() {
@@ -40,6 +38,7 @@ public class MongoDB {
             db = mongo.getDatabase("tweetsDBT");
 
             collection = db.getCollection("tweetsCollection");
+            collectionXima = db.getCollection("tweetsCollectionTest");
             sleep(300); // delete me
             System.out.println("Connected to Mongo DB!");
         } catch (MongoException ex) {
@@ -61,11 +60,22 @@ public class MongoDB {
         return mongo;
     }
 
-    public void readDataBase() {
+    public void readCollection(int a) {
         // read from the database and print
-        System.out.println("Reading database:");
+        System.out.println("Reading collection:");
 
-        MongoCursor<Document> cursor = collection.find().iterator();
+        MongoCursor<Document> cursor = null;
+        switch (a) {
+            case 1:
+                cursor = collection.find().iterator();
+                break;
+            case 2:
+                cursor = collectionXima.find().iterator();
+                break;
+            default:
+                System.out.println("Error: No such collection! (You need to give a number for the collection like 1 or 2)");
+                break;
+        }
         try {
             int i = 0;
             while (cursor.hasNext()) {
@@ -76,23 +86,38 @@ public class MongoDB {
         } finally {
             cursor.close();
         }
-        System.out.println("Fisnish reading database!");
+        System.out.println("Finish reading collection!");
     }
-
+    
     public void closeDataBase() {
         System.out.println("Closing connection to Mongo DB..");
         this.mongo.close();
         System.out.println("Connection to Mongo DB closed!");
     }
 
-    public void dropCollection() {
+    public void dropCollection(int a) {
         System.out.println("Droping collection..");
-        this.collection.drop();
+        switch (a) {
+            case 1:
+                this.collection.drop();
+                break;
+            case 2:
+                this.collectionXima.drop();
+                break;
+            default:
+                System.out.println("Error: No such collection! (You need to give a number for the collection like 1 or 2)");
+                break;
+        }
         System.out.println("Collection droped!");
     }
 
     public void showTweetsCount() {
         System.out.println("Number of tweets: " + this.collectionGetter().count());
+    }
+
+    public void test(String loula) {
+        Document doc = Document.parse(loula);
+        collectionXima.insertOne(doc);
     }
 
     public void test() {
@@ -102,66 +127,91 @@ public class MongoDB {
         try (MongoCursor<Document> cursor = collection.find().iterator()) {
             int i = 0;
             while (cursor.hasNext()) {
+                System.out.println(i);
                 i++;
                 Document thisCursor = cursor.next();
                 //System.out.println(thisCursor); //prints full json format
 
                 String text = thisCursor.get("text").toString(); //text of the tweet
-
+                String forXima = "{";
                 if (!text.contains("…")) { //if the text has ellipsis, ignore it
                     System.out.println("keimeno ok:");
                     String timestamp = thisCursor.get("timestamp_ms").toString();
-                    System.out.println("Timestamp: " + timestamp);
-                    System.out.println("Keimeno: " + text);
+                    forXima = forXima + "\nTimestamp: \"" + timestamp + "\"";
+//                    System.out.println("Keimeno: " + text);
                     Document userField = (Document) (thisCursor.get("user"));
                     String username = (String) userField.get("screen_name");
-                    System.out.println("Onoma: " + username);
+                    forXima = forXima + "\nOnoma: \"" + username + "\"";
                     Document entitiesField = (Document) (thisCursor.get("entities"));
                     Document retweetedStatus = (Document) thisCursor.get("retweeted_status");
-                    System.out.println("Retweeted Status: " + retweetedStatus);
+                   // forXima = forXima + "\nRetweeted_Status: \"" + retweetedStatus + "\"";
                     if (retweetedStatus != null) {
                         String idStr = (String) retweetedStatus.get("id_str");
-                        System.out.println("Id String: " + idStr);
+                        forXima = forXima + "\nId_String: " + idStr;
                     }
                     Matcher matcher = Pattern.compile("#(\\w+)").matcher(text);
                     Matcher matcher2 = Pattern.compile("@(\\w+)").matcher(text);
-                    System.out.println("Hashtags!");
+                    forXima = forXima + "\nHashtags: [";
+                    boolean iCheck1 = true;
+                    boolean iCheck2 = true;
                     while (matcher.find()) {
-                        System.out.println(matcher.group(1));
+                        if (iCheck1 == true) {
+                            forXima = forXima  + "\"" + matcher.group(1) + "\"";
+                            iCheck1 = false;
+                        } else {
+                            forXima = forXima  + ", " + "\"" + matcher.group(1) + "\"";
+                        }
                     }
-                    System.out.println("Mentions!");
+                    forXima = forXima + "]";
+                    forXima = forXima + "\nMentions: [";
                     while (matcher2.find()) {
-                        System.out.println(matcher2.group(1));
+                        if (iCheck2 == true) {
+                            forXima = forXima + "\"" + matcher2.group(1) + "\"";
+                            iCheck2 = false;
+                        } else {
+                            forXima = forXima + ", " + "\"" + matcher2.group(1) + "\"";
+                        }
                     }
-                    //System.out.println("prwto");
-                    //System.out.println(entitiesField); //to value tou entities
-                    //System.out.println("deutero");
-                    //System.out.println(entitiesField.get("urls")); //to value tou urls
+                    forXima = forXima + "]";
                     ArrayList urlsField = (ArrayList) entitiesField.get("urls");
-                    //System.out.println("trito");
                     int z = urlsField.size();
                     int j;
+                    String urls = "\nURLs: [";
+                    String exUrls = "\nexURLs: [";
+                    iCheck1 = true;
+                    iCheck2 = true;
                     if (z > 0) {
                         ArrayList<String> a = new ArrayList();
                         ArrayList<String> b = new ArrayList();
                         for (j = 0; j < z; j++) {
                             Document currentUrlsField = (Document) urlsField.get(j);
-                            //System.out.println(currentUrlsField);
-                            //System.out.println("tetarto");
                             String url = (String) currentUrlsField.get("url");
                             if (!url.equals("")) {
                                 a.add(j, url);
-                                System.out.println("Url: " + url);
+                                if (iCheck1 == true) {
+                                    urls = urls + "\"" + url + "\"" ;
+                                    iCheck1 = false;
+                                } else {
+                                    urls = urls + ", " + "\"" + url + "\"" ;
+                                }
                             }
                             String expandedUrl = (String) currentUrlsField.get("expanded_url");
                             if (expandedUrl != null) {
                                 b.add(j, expandedUrl);
-                                System.out.println("Expanded Url: " + expandedUrl);
+                                if (iCheck2 == true) {
+                                    exUrls = exUrls + "\"" + expandedUrl + "\"" ;
+                                    iCheck2 = false;
+                                } else {
+                                    exUrls = exUrls + ", " + "\"" + expandedUrl + "\"" ;
+                                }
                             }
-
                         }
+                        forXima = forXima + urls + "]" + exUrls + "]";
                     }
-                    System.out.println(i);
+                    forXima = forXima + "\n}";
+
+                    System.out.println(forXima);
+                    test(forXima);
                 }
             }
         }
