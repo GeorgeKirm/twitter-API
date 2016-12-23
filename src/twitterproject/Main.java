@@ -17,7 +17,7 @@ public class Main {
         Twitter loula;
         MongoDB dataBase = new MongoDB();
         do {
-            try {
+//            try {
                 int a;
                 Scanner in = new Scanner(System.in);
                 System.out.println("\n");
@@ -46,17 +46,20 @@ public class Main {
                         dataBase.readCollection(a);
                         break;
                     case 4:
-                        dataBase.showTweetsCount();
+                        System.out.print("(press int for collection): ");
+                        a = in.nextInt();
+                        dataBase.showTweetsCount(a);
                         break;
                     case 5:
                         dataBase.test();
+//                        dataBase.elegxosIndexing();
                         break;
                     default:
                         pass = true;
                 }
-            } catch (Exception ex) {
-                System.out.print("\nError: Something went wrong! (maybe you didnt gave number)");
-            }
+//            } catch (Exception ex) {
+//                System.out.print("\nError: Something went wrong! (maybe you didnt gave number)");
+//            }
         } while (pass == false);
         dataBase.closeDataBase();
     }
