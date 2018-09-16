@@ -40,10 +40,10 @@ public class Twitter {
         this.timeToStop = timeToStop;
         cb = new ConfigurationBuilder();
         cb.setDebugEnabled(true);
-        cb.setOAuthConsumerKey("BqEnvpMF3M3vhEg0EVqd7jOMz");
-        cb.setOAuthConsumerSecret("sXY8Xrocjs7hWDOJi9tQdaQPHsQ6M6M2LA4Sx0IdNh3Jtf4ue2");
-        cb.setOAuthAccessToken("3331853573-6QQCtpjyGRq1H4MQmqbtQc0zq0uVILfTyGDhUTF");
-        cb.setOAuthAccessTokenSecret("57ruwsXfBUh8W7BEvF4le5Stjz1QgPMWZ6EfrPjg0AOfa");
+        cb.setOAuthConsumerKey("setOAuthConsumerKey"); // you need to set your own
+        cb.setOAuthConsumerSecret("setOAuthConsumerSecret");
+        cb.setOAuthAccessToken("setOAuthAccessToken");
+        cb.setOAuthAccessTokenSecret("setOAuthAccessTokenSecret");
         cb.setJSONStoreEnabled(true);
     }
 
