@@ -16,18 +16,28 @@ import twitter4j.TwitterObjectFactory;
 import twitter4j.TwitterStream;
 import twitter4j.TwitterStreamFactory;
 import twitter4j.conf.ConfigurationBuilder;
-import static java.lang.Thread.sleep;
 import org.bson.Document;
+import static java.lang.Thread.sleep;
 
 /**
- *
+ * This class uses the twitter streaming API to get tweets for them to be
+ * stored in a collection of the database.
+ * 
  * @author x
  */
 public class Twitter {
+
     private static ConfigurationBuilder cb;
-    private final int tweetCount; // to stop the twitterStream
-    Twitter(int tweetCount) {
-        this.tweetCount = tweetCount;
+    private final int timeToStop; // to stop the twitterStream
+
+    /**
+     * Initialise the object.
+     * 
+     * @param timeToStop the time in seconds to download new tweets
+     * from the API
+     */
+    Twitter(int timeToStop) {
+        this.timeToStop = timeToStop;
         cb = new ConfigurationBuilder();
         cb.setDebugEnabled(true);
         cb.setOAuthConsumerKey("BqEnvpMF3M3vhEg0EVqd7jOMz");
@@ -36,6 +46,13 @@ public class Twitter {
         cb.setOAuthAccessTokenSecret("57ruwsXfBUh8W7BEvF4le5Stjz1QgPMWZ6EfrPjg0AOfa");
         cb.setJSONStoreEnabled(true);
     }
+
+    /**
+     * Gets weets until "timeToStop" from twitter according to some specific 
+     * hashtags and stores them to one of the collections.
+     * 
+     * @param dataBase the mongo database
+     */
     public void listener(MongoDB dataBase) {
         TwitterStreamFactory tsf = new TwitterStreamFactory(cb.build());
         TwitterStream twitterStream = tsf.getInstance();
@@ -75,24 +92,21 @@ public class Twitter {
                 System.out.println("Got stall warning:" + sw);
             }
         };
-        twitterStream.addListener(listener);        
+        twitterStream.addListener(listener);
         FilterQuery fq = new FilterQuery();
-        String keywords[] = {"#trump", "#MakeAmericaGreatAgain","#USelection","#NeverHillary","#3rdparty"};
+        // Tweets will be downloaded according to theses hashtags
+        String keywords[] = {"#trump", "#MakeAmericaGreatAgain", "#USelection", "#NeverHillary", "#3rdparty"};
 
         fq.track(keywords);
-        twitterStream.filter(fq);  
-        
+        twitterStream.filter(fq);
+
         try {
             // 1000 = 1 second
-            sleep(tweetCount*1000);
+            sleep(timeToStop * 1000);
         } catch (InterruptedException ex) {
             Logger.getLogger(Twitter.class.getName()).log(Level.SEVERE, null, ex);
         }
         
-//        // to stop the stream
-//        while (dataBase.collectionGetter().count() < tweetCount) {
-//
-//        }
         twitterStream.shutdown();
         System.out.println("Closing connection");
 
